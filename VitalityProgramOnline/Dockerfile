@@ -5,6 +5,11 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
+# Установка времени
+RUN rm -rf /etc/localtime \
+    && ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime \
+    && echo "Europe/Moscow" > /etc/timezone
+
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["VitalityProgramOnline/VitalityProgramOnline.csproj", "VitalityProgramOnline/"]
