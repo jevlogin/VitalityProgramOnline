@@ -600,7 +600,14 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
                             await _botClient.SendTextMessageAsync(message.Chat.Id, $"Данные получены! ❤ 👌 ✔", replyMarkup: new ReplyKeyboardRemove());
                             await Pause(500);
 
-                            await ParseWebAppData(message, webAppData, cancellationToken);
+                            try
+                            {
+                                await ParseWebAppData(message, webAppData, cancellationToken);
+                            }
+                            catch (Exception ex)
+                            {
+                                await Console.Out.WriteLineAsync($"Не удалось обработать данные.{ex.Message}");
+                            }
 
                             break;
                         default:
@@ -1044,7 +1051,7 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
                             await Console.Out.WriteLineAsync($"Возникло исключение:\n\n{ex}");
                             return;
                         }
-                        userBotSettings!.UserId = message.From.Id.ToString();
+                        userBotSettings!.UserId = message.From!.Id;
 
                         if (!_userList.Keys.Contains(message.From.Id))
                         {
@@ -1059,6 +1066,8 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
                         }
                         else
                         {
+                            userBotSettings.Id = _userList[message.From.Id].Id;
+
                             await _databaseService.AddOrUpdateBotSettingsAsync(userBotSettings);
                             await Pause(1000, 2000);
                             //TODO - изменить настройки пользователя..
@@ -1081,7 +1090,7 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
 
                         if (foodDiary != null)
                         {
-                            foodDiary.UserId = message.From.Id.ToString();
+                            foodDiary.UserId = message.From.Id;
 
                             Console.WriteLine(foodDiary.ToString());
 
@@ -1098,7 +1107,10 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
                             }
                             else
                             {
+                                foodDiary.UserIdForeignKey = _userList[message.From.Id].Id;
+
                                 await _databaseService.AddOrUpdateFoodDiaryAsync(foodDiary);
+
                                 await Pause(1000, 2000);
                                 await _botClient.SendTextMessageAsync(message.From.Id, $"Вот Ваша запись:\n\n");
                                 await Pause(1000, 2000);
@@ -1129,6 +1141,7 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
                                 if (msgToUserIntro != null)
                                 {
                                     await _databaseService.AddOrUpdateUserAsync(user);
+                                    //может быть стоит тут теперь извлекать пользователя из базы, а потом создавать прогресс
 
                                     await AddedNewUserProgressInLocalListAndSubscribeUpdate(day: 1, step: 0, user: user);
                                     await _databaseService.UpdateUserProgressAsync(_progressUsersList[user.UserId!.Value]);
@@ -1154,38 +1167,34 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
                         {
                             userRequest.UserId = message.From!.Id;
 
-                            var tempUser = new ApplicationUser()
-                            {
-                                UserId = userRequest.UserId,
-                                IsAdmin = false,
-                                FirstName = userRequest.FirstName,
-                                LastName = userRequest.LastName,
-                                PhoneNumber = userRequest.PhoneNumber
-                            };
+                            
 
-                            if (!_userList.ContainsKey(tempUser.UserId.Value))
+                            if (!_userList.ContainsKey(userRequest.UserId.Value))
                             {
-                                await AddedNewUserToLocalUserList(tempUser);
-                                var msgToUserIntro = await _botClient.SendTextMessageAsync(tempUser.UserId, $"Отлично! Рад знакомству, {tempUser.FirstName}");
+                                await AddedNewUserToLocalUserList(userRequest);
+                                var msgToUserIntro = await _botClient.SendTextMessageAsync(userRequest.UserId, $"Отлично! Рад знакомству, {userRequest.FirstName}");
 
                                 if (msgToUserIntro != null)
                                 {
-                                    await _databaseService.AddOrUpdateUserAsync(tempUser);
+                                    /* Эксперимент создаю пароль */
+                                    await _databaseService.AddOrUpdateUserAsync(userRequest);
+                                    await _botClient.SendTextMessageAsync(userRequest.UserId, "Ваш временный пароль для входа в сервис - 'tempPWD@1'");
 
-                                    await AddedNewUserProgressInLocalListAndSubscribeUpdate(day: 1, step: 0, user: tempUser);
-                                    await _databaseService.UpdateUserProgressAsync(_progressUsersList[tempUser.UserId.Value]);
+                                    await AddedNewUserProgressInLocalListAndSubscribeUpdate(day: 1, step: 0, user: userRequest);
+                                    await _databaseService.UpdateUserProgressAsync(_progressUsersList[userRequest.UserId.Value]);
 
                                 }
-                                await SendMessageToAdminsForOnlineConsultation(tempUser, cancellationToken);
+                                await SendMessageToAdminsForOnlineConsultation(userRequest, cancellationToken);
                             }
                             else
                             {
-                                await AddedNewUserToLocalUserList(tempUser);
-                                await _databaseService.AddOrUpdateUserAsync(tempUser);
+                                var newlocalUser = _userList[userRequest.UserId.Value].UpdateUser(userRequest);
+                                //await AddedNewUserToLocalUserList(userRequest);
+                                await _databaseService.AddOrUpdateUserAsync(newlocalUser);
 
-                                await _botClient.SendTextMessageAsync(tempUser.UserId,
-                                    $"{tempUser.FirstName}, я тебя помню ✌😊 и записал тебя на консультацию.");
-                                await SendMessageToAdminsForOnlineConsultation(tempUser, cancellationToken);
+                                await _botClient.SendTextMessageAsync(userRequest.UserId,
+                                    $"{userRequest.FirstName}, я тебя помню ✌😊 и записал тебя на консультацию.");
+                                await SendMessageToAdminsForOnlineConsultation(userRequest, cancellationToken);
                             }
                         }
                         break;
@@ -1294,7 +1303,7 @@ namespace VitalityProgramOnline.Apps.Telegram.Controler
             }
             else
             {
-                _userList[user.UserId.Value] = user;
+                _userList[user.UserId.Value].UpdateUser(user);
                 await Console.Out.WriteLineAsync($"Пользователь с id {user.UserId} уже существует в локальном списке пользователей. Данные обновлены.");
             }
         }

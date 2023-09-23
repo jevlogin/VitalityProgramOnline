@@ -12,8 +12,8 @@ using VitalityProgramOnline.Data;
 namespace VitalityProgramOnline.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230921091357_Initial")]
-    partial class Initial
+    [Migration("20230923045205_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -338,7 +338,10 @@ namespace VitalityProgramOnline.Data.Migrations
                     b.Property<double?>("ProteinAmount")
                         .HasColumnType("float");
 
-                    b.Property<string>("UserId")
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("UserIdForeignKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -350,18 +353,15 @@ namespace VitalityProgramOnline.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserIdForeignKey");
 
                     b.ToTable("FoodDiary");
                 });
 
             modelBuilder.Entity("VitalityProgramOnline.Models.User.ProgressUsers", b =>
                 {
-                    b.Property<long>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserId"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("CurrentDay")
                         .HasColumnType("int");
@@ -375,10 +375,6 @@ namespace VitalityProgramOnline.Data.Migrations
                     b.Property<DateTime>("DateTimeOfTheNextStep")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Id")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<bool>("IsTheNextDaysUpdateIsCompleted")
                         .HasColumnType("bit");
 
@@ -388,16 +384,17 @@ namespace VitalityProgramOnline.Data.Migrations
                     b.Property<int>("UpdateState")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId");
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
 
-                    b.HasIndex("Id");
+                    b.HasKey("Id");
 
                     b.ToTable("ProgressUsers");
                 });
 
             modelBuilder.Entity("VitalityProgramOnline.Models.User.Settings.UserBotSettings", b =>
                 {
-                    b.Property<string>("UserId")
+                    b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<TimeSpan?>("EveningTime")
@@ -406,7 +403,10 @@ namespace VitalityProgramOnline.Data.Migrations
                     b.Property<TimeSpan?>("MorningTime")
                         .HasColumnType("time");
 
-                    b.HasKey("UserId");
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
 
                     b.ToTable("UserBotSettings");
                 });
@@ -557,7 +557,7 @@ namespace VitalityProgramOnline.Data.Migrations
                 {
                     b.HasOne("VitalityProgramOnline.Models.User.ApplicationUser", "User")
                         .WithMany("FoodDiaryEntries")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UserIdForeignKey")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -567,8 +567,8 @@ namespace VitalityProgramOnline.Data.Migrations
             modelBuilder.Entity("VitalityProgramOnline.Models.User.ProgressUsers", b =>
                 {
                     b.HasOne("VitalityProgramOnline.Models.User.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("Id")
+                        .WithOne("Progress")
+                        .HasForeignKey("VitalityProgramOnline.Models.User.ProgressUsers", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -578,8 +578,8 @@ namespace VitalityProgramOnline.Data.Migrations
             modelBuilder.Entity("VitalityProgramOnline.Models.User.Settings.UserBotSettings", b =>
                 {
                     b.HasOne("VitalityProgramOnline.Models.User.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .WithOne("UserBotSettings")
+                        .HasForeignKey("VitalityProgramOnline.Models.User.Settings.UserBotSettings", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -600,6 +600,12 @@ namespace VitalityProgramOnline.Data.Migrations
             modelBuilder.Entity("VitalityProgramOnline.Models.User.ApplicationUser", b =>
                 {
                     b.Navigation("FoodDiaryEntries");
+
+                    b.Navigation("Progress")
+                        .IsRequired();
+
+                    b.Navigation("UserBotSettings")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

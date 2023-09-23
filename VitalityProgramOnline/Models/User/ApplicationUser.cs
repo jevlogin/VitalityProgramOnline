@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using VitalityProgramOnline.Helper;
 using VitalityProgramOnline.Models.FoodDiary;
-
+using VitalityProgramOnline.Models.User.Settings;
 
 namespace VitalityProgramOnline.Models.User
 {
@@ -26,5 +26,7 @@ namespace VitalityProgramOnline.Models.User
         public string? FitnessGoals { get; set; }
 
         public ICollection<FoodDiaryEntry> FoodDiaryEntries { get; set; }
+        public ProgressUsers Progress { get; set; }
+        public UserBotSettings UserBotSettings { get; set; }
     }
 }

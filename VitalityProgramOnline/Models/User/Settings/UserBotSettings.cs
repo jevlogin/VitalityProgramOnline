@@ -7,13 +7,15 @@ namespace VitalityProgramOnline.Models.User.Settings
     public class UserBotSettings : EmptyBotSettings
     {
         [Key]
-        public string UserId { get; set; }
+        [ForeignKey(nameof(User))]
+        public string Id { get; set; }
+
+        public long UserId { get; set; }
 
         public TimeSpan? MorningTime { get; set; }
         public TimeSpan? EveningTime { get; set; }
 
 
-        [ForeignKey("UserId")]
         public ApplicationUser User { get; set; }
 
         public override string ToString()

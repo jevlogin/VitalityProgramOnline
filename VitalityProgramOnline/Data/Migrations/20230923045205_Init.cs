@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace VitalityProgramOnline.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -200,7 +200,8 @@ namespace VitalityProgramOnline.Data.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserIdForeignKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     MealType = table.Column<int>(type: "int", nullable: false),
                     EatPurpose = table.Column<int>(type: "int", nullable: true),
@@ -218,8 +219,8 @@ namespace VitalityProgramOnline.Data.Migrations
                 {
                     table.PrimaryKey("PK_FoodDiary", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_FoodDiary_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_FoodDiary_AspNetUsers_UserIdForeignKey",
+                        column: x => x.UserIdForeignKey,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -229,9 +230,8 @@ namespace VitalityProgramOnline.Data.Migrations
                 name: "ProgressUsers",
                 columns: table => new
                 {
-                    UserId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
                     UpdateState = table.Column<int>(type: "int", nullable: false),
                     DateNextDay = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateTimeOfTheNextStep = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -242,7 +242,7 @@ namespace VitalityProgramOnline.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProgressUsers", x => x.UserId);
+                    table.PrimaryKey("PK_ProgressUsers", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ProgressUsers_AspNetUsers_Id",
                         column: x => x.Id,
@@ -255,16 +255,17 @@ namespace VitalityProgramOnline.Data.Migrations
                 name: "UserBotSettings",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
                     MorningTime = table.Column<TimeSpan>(type: "time", nullable: true),
                     EveningTime = table.Column<TimeSpan>(type: "time", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserBotSettings", x => x.UserId);
+                    table.PrimaryKey("PK_UserBotSettings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserBotSettings_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_UserBotSettings_AspNetUsers_Id",
+                        column: x => x.Id,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -355,14 +356,9 @@ namespace VitalityProgramOnline.Data.Migrations
                 column: "Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FoodDiary_UserId",
+                name: "IX_FoodDiary_UserIdForeignKey",
                 table: "FoodDiary",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProgressUsers_Id",
-                table: "ProgressUsers",
-                column: "Id");
+                column: "UserIdForeignKey");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuestionAnswerPair_ResponseDataId",

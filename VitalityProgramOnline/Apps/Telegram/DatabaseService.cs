@@ -145,7 +145,7 @@ namespace VitalityProgramOnline.Apps.Telegram
         {
             try
             {
-                var existProgress = await _dbContext.ProgressUsers.FindAsync(progress.UserId);
+                var existProgress = await _dbContext.ProgressUsers.FirstOrDefaultAsync(p => p.UserId == progress.UserId);
                 if (existProgress == null)
                 {
                     await _dbContext.ProgressUsers.AddAsync(progress);
@@ -175,7 +175,7 @@ namespace VitalityProgramOnline.Apps.Telegram
 
         internal async Task<EmptyBotSettings> ReadUserBotSettings(long userId, CancellationToken none)
         {
-            var userBotSettings = await _dbContext.UserBotSettings.FindAsync(userId);
+            var userBotSettings = await _dbContext.UserBotSettings.FirstOrDefaultAsync(u => u.UserId == userId);
             if (userBotSettings == null)
             {
                 return new EmptyBotSettings();
@@ -194,16 +194,32 @@ namespace VitalityProgramOnline.Apps.Telegram
 
             if (existingUsers == null)
             {
-                await _dbContext.ApplicationUser.AddAsync(user);
-                await Console.Out.WriteLineAsync($"Был добавлен новый пользователь в базу даннных");
+                //await _dbContext.ApplicationUser.AddAsync(user);
+                
+                var result = await _userManager.CreateAsync(user, "tempPWD@1");
+
+                if (result.Succeeded)
+                {
+                    await Console.Out.WriteLineAsync($"Пользователь {user.FirstName} успешно создан.");
+                }
+                else
+                {
+                    await Console.Out.WriteLineAsync($"Не удалось создать первого администратора.");
+                    foreach (var error in result.Errors)
+                    {
+                        await Console.Out.WriteLineAsync(error.Description);
+                    }
+                }
             }
             else
             {
-                _dbContext.Entry(existingUsers).CurrentValues.SetValues(user);
-                _dbContext.Entry(existingUsers).Property(u => u.Id).IsModified = false;
+                await _userManager.UpdateAsync(user);
+
+                //_dbContext.Entry(existingUsers).Property(u => u.Id).IsModified = false;
+                //_dbContext.Entry(existingUsers).CurrentValues.SetValues(user);
             }
 
-            await _dbContext.SaveChangesAsync();
+            //await _dbContext.SaveChangesAsync();
         }
 
         #endregion
@@ -277,7 +293,7 @@ namespace VitalityProgramOnline.Apps.Telegram
 
         internal async Task<IEnumerable<FoodDiaryEntry>> ReadTheFoodDiaryForTheCurrentDay(long id, CancellationToken cancellationToken)
         {
-            return await _dbContext.FoodDiary.Where(entry => entry.UserId == id.ToString() && entry.Date == DateTime.Now.Date).ToListAsync();
+            return await _dbContext.FoodDiary.Where(entry => entry.UserId == id && entry.Date == DateTime.Now.Date).ToListAsync();
         }
 
         #endregion

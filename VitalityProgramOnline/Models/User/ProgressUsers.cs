@@ -31,10 +31,10 @@ namespace VitalityProgramOnline.Models.User
         #region Properties
 
         [Key]
-        public long UserId { get; set; }
+        [ForeignKey(nameof(User))]
         public string Id { get; set; }
+        public long UserId { get; set; }
 
-        [ForeignKey(nameof(Id))]
         public ApplicationUser User { get; set; }
 
         public UpdateState UpdateState

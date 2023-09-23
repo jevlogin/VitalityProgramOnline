@@ -13,7 +13,12 @@ namespace VitalityProgramOnline.Models.FoodDiary
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
-        public string UserId { get; set; }
+
+        [ForeignKey(nameof(User))]
+        public string UserIdForeignKey { get; set; }
+        
+        public long UserId { get; set; }
+        
         public DateTime Date { get; set; }
         public MealType MealType { get; set; }
         public EatPurpose? EatPurpose { get; set; }
@@ -27,7 +32,6 @@ namespace VitalityProgramOnline.Models.FoodDiary
         public double? CarbohydrateAmount { get; set; }
         public double Cost { get; set; }
 
-        [ForeignKey(nameof(UserId))]
         public ApplicationUser User { get; set; }
 
         #endregion
